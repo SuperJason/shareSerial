@@ -1,0 +1,20 @@
+{
+  "com_port": "COM161",
+  "baud_rate": 115200,
+  "log_file": "C:/work/tools/hub4com/ftdi_test.log",
+  "target_ip": "",
+  "target_port": 2601,
+  "data_log_file": "",
+  "hub4com_path": "C:/work/tools/hub4com/hub4com-2.1.0.0-386/hub4com.exe",
+  "hub_physical_port": "COM6",
+  "hub_slave_port": "COM162",
+  "hub_extra_slaves": [
+    "COM165"
+  ],
+  "hub4com_log_file": "C:/work/tools/hub4com/ftdi_test_hub4com.log",
+  "web_port": 18080,
+  "ftdi_enabled": true,
+  "ftdi_serial": "",
+  "ftdi_cbus_pin": 0,
+  "ftdi_active_low": false
+}

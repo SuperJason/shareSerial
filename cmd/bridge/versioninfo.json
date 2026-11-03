@@ -1,0 +1,25 @@
+{
+  "FixedFileInfo": {
+    "FileVersion": { "Major": 1, "Minor": 0, "Patch": 0, "Build": 0 },
+    "ProductVersion": { "Major": 1, "Minor": 0, "Patch": 0, "Build": 0 },
+    "FileFlagsMask": "3f",
+    "FileFlags": "0",
+    "FileOS": "40004",
+    "FileType": "01",
+    "FileSubType": "00"
+  },
+  "StringFileInfo": {
+    "CompanyName": "Wiseasy",
+    "FileDescription": "COM to TCP bridge with hub4com management (tray + web UI)",
+    "FileVersion": "1.0.0",
+    "InternalName": "bridge_hub_tray",
+    "OriginalFilename": "bridge_hub_tray.exe",
+    "ProductName": "Serial Bridge Hub",
+    "ProductVersion": "1.0.0"
+  },
+  "VarFileInfo": {
+    "Translation": { "LangID": "0409", "CharsetID": "04B0" }
+  },
+  "IconPath": "bridge-hub.ico",
+  "ManifestPath": ""
+}

@@ -17,10 +17,11 @@ import (
 )
 
 const (
-	hubStartupTimeout = 15 * time.Second
-	hubReadyPoll      = 300 * time.Millisecond
-	hubRestartBackoff = 2 * time.Second
-	hubBackoffMax     = 10 * time.Second
+	hubStartupTimeout     = 15 * time.Second
+	hubReadyPoll          = 300 * time.Millisecond
+	hubRestartBackoff     = 2 * time.Second
+	hubBackoffMax         = 10 * time.Second
+	physicalWatchInterval = 1 * time.Second
 )
 
 // hub4comManager spawns and supervises a hub4com.exe child process that
@@ -31,9 +32,9 @@ const (
 // COM22 -> LAN chain: start, crash-restart, and cleanup are automatic.
 type hub4comManager struct {
 	exePath      string
-	physicalPort string // real COM port (e.g. COM22)
-	slavePort    string // com0com pair end hub4com attaches to (e.g. COM24)
-	bridgePort   string // pair peer the bridge opens (e.g. COM23)
+	physicalPort string   // real COM port (e.g. COM22)
+	slavePort    string   // com0com pair end hub4com attaches to (e.g. COM24)
+	bridgePort   string   // pair peer the bridge opens (e.g. COM23)
 	extraSlaves  []string // additional hub4com slave ports for other consumers (e.g. local serial monitor)
 	baud         int
 	logFile      string
@@ -43,13 +44,13 @@ type hub4comManager struct {
 	// held by it. It must close and re-open the bridge serial port.
 	onReady func() error
 
-	mu       sync.Mutex
-	cmd      *exec.Cmd
-	stopped  bool
-	logF     *os.File
-	readyCh  chan error // first readiness result (buffered)
+	mu        sync.Mutex
+	cmd       *exec.Cmd
+	stopped   bool
+	logF      *os.File
+	readyCh   chan error // first readiness result (buffered)
 	restartCh chan struct{}
-	wg       sync.WaitGroup
+	wg        sync.WaitGroup
 }
 
 func newHub4comManager(exePath, physicalPort, slavePort, bridgePort string, extraSlaves []string, baud int, logFile string, logger *log.Logger) *hub4comManager {
@@ -155,6 +156,8 @@ func (m *hub4comManager) Start() error {
 
 	m.wg.Add(1)
 	go m.supervise()
+	m.wg.Add(1)
+	go m.watchPhysicalPort()
 	return nil
 }
 
@@ -168,6 +171,33 @@ func (m *hub4comManager) isStopped() bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.stopped
+}
+
+// Running reports whether a hub4com child process is currently live.
+//
+// This is a read-only accessor added for the FTDI VBUS feature, which needs to
+// know whether the serial port is held before it can take the device over
+// D2XX. It has no side effects and is not used by any existing hub4com path.
+func (m *hub4comManager) Running() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.cmd != nil
+}
+
+// Status returns a snapshot for the Web UI / tray.
+func (m *hub4comManager) Status() map[string]any {
+	m.mu.Lock()
+	run := m.cmd != nil && !m.stopped
+	m.mu.Unlock()
+	return map[string]any{
+		"exe":          m.exePath,
+		"physicalPort": m.physicalPort,
+		"slavePort":    m.slavePort,
+		"bridgePort":   m.bridgePort,
+		"extraSlaves":  m.extraSlaves,
+		"baud":         m.baud,
+		"running":      run,
+	}
 }
 
 func (m *hub4comManager) currentBridgePort() string {
@@ -213,6 +243,7 @@ func (m *hub4comManager) supervise() {
 		}
 
 		cmd := exec.Command(m.exePath, args...)
+		hideWindow(cmd)
 		cmd.Stdout = m.output()
 		cmd.Stderr = m.output()
 
@@ -380,5 +411,71 @@ func (m *hub4comManager) Stop() {
 	if m.logF != nil {
 		_ = m.logF.Close()
 		m.logF = nil
+	}
+}
+
+// watchPhysicalPort polls for the physical COM port's presence and reacts to
+// unplug/replug. A USB-serial device can vanish (enumerated away) or "flutter"
+// briefly; hub4com may then stall on a dead handle WITHOUT exiting, which the
+// supervisor's exit-restart alone would never catch. On any presence change we
+// kick a restart so the chain re-establishes itself once the device is back.
+func (m *hub4comManager) watchPhysicalPort() {
+	defer m.wg.Done()
+	wasPresent := m.physicalPortPresent()
+	ticker := time.NewTicker(physicalWatchInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			if m.isStopped() {
+				return
+			}
+			present := m.physicalPortPresent()
+			if present == wasPresent {
+				continue
+			}
+			wasPresent = present
+			if present {
+				m.logger.Printf("hub4com: physical port %s re-attached, restarting", m.physicalPort)
+			} else {
+				m.logger.Printf("hub4com: physical port %s removed, restarting", m.physicalPort)
+			}
+			m.kickRestart()
+		}
+	}
+}
+
+// physicalPortPresent reports whether the physical port is currently
+// enumerated by the OS. It only ENUMERATES — never opens the port — so it works
+// even while hub4com holds the port exclusively.
+func (m *hub4comManager) physicalPortPresent() bool {
+	ports, err := serial.GetPortsList()
+	if err != nil {
+		// enumeration failed — assume present to avoid needless restarts
+		return true
+	}
+	want := strings.ToUpper(strings.TrimSpace(m.physicalPort))
+	for _, p := range ports {
+		if strings.ToUpper(strings.TrimSpace(p)) == want {
+			return true
+		}
+	}
+	return false
+}
+
+// kickRestart forces hub4com to restart immediately: kills the running child
+// (handles the stalled-on-dead-handle case), or wakes a backoff sleep via
+// restartCh (handles the already-exited case).
+func (m *hub4comManager) kickRestart() {
+	m.mu.Lock()
+	cmd := m.cmd
+	m.mu.Unlock()
+	if cmd != nil && cmd.Process != nil {
+		_ = cmd.Process.Kill()
+		return
+	}
+	select {
+	case m.restartCh <- struct{}{}:
+	default:
 	}
 }
