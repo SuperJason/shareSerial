@@ -1,0 +1,254 @@
+:root {
+  --bg: #0d1117;
+  --panel: #151b23;
+  --panel-2: #1b232d;
+  --line: #26303c;
+  --fg: #d8e0ea;
+  --dim: #7d8b9c;
+  --accent: #3d8bfd;
+  --ok: #3ecf8e;
+  --err: #ff6b6b;
+  --warn: #f7b955;
+  --mono: "Cascadia Mono", Consolas, "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.45 "Segoe UI", system-ui, sans-serif;
+  overflow: hidden;
+}
+
+/* ---------- toolbar ---------- */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+  user-select: none;
+}
+.spacer { flex: 1; }
+
+select, input, button {
+  font: inherit;
+  color: var(--fg);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 8px;
+  outline: none;
+}
+input#baud { font-family: var(--mono); }
+input:focus, select:focus { border-color: var(--accent); }
+button { cursor: pointer; }
+button:hover { border-color: #3a4657; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+button.primary:hover { filter: brightness(1.08); }
+button.icon { padding: 5px 7px; }
+button:disabled { opacity: .5; cursor: default; }
+select:disabled { opacity: .6; }
+
+.pill {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #2a2f3a;
+  color: var(--dim);
+}
+.pill.open { background: rgba(62, 207, 142, .15); color: var(--ok); }
+.pill.error { background: rgba(255, 107, 107, .15); color: var(--err); }
+.pill.demo { background: rgba(247, 185, 85, .15); color: var(--warn); }
+
+.stat { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .04em; }
+.stat b { color: var(--fg); font-variant-numeric: tabular-nums; }
+
+/* ---------- terminal ---------- */
+#screenwrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+#term {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* right padding reserves the gutter for our own scrollbar */
+  padding: 6px 16px 0 12px;
+  overflow: hidden;
+}
+#term .xterm { height: 100%; }
+
+/* xterm's own scrollbar sits underneath the screen layer, so it cannot be
+   grabbed with the mouse (clicks land on the text layer). It is switched off
+   and replaced by #scrollbar, which is a normal element on top. */
+#term .xterm-viewport { overflow-y: hidden !important; }
+#term .xterm-viewport::-webkit-scrollbar { width: 0; height: 0; }
+
+#scrollbar {
+  position: absolute;
+  top: 6px;
+  right: 4px;
+  bottom: 2px;
+  width: 10px;
+  z-index: 5;
+}
+#scrollthumb {
+  position: absolute;
+  left: 0;
+  width: 10px;
+  border-radius: 5px;
+  background: #2f3a48;
+  cursor: grab;
+}
+#scrollthumb:hover { background: #3d4a5c; }
+#scrollthumb.dragging { background: #4d5d72; cursor: grabbing; }
+#scrollthumb.hidden { display: none; }
+
+/* ---------- footer ---------- */
+.foot {
+  flex: 0 0 auto;
+  padding: 4px 12px 5px;
+  font-size: 11px;
+  color: var(--dim);
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.foot b { color: #a9b7c8; font-weight: 600; }
+
+/* ---------- context menu ---------- */
+.ctxmenu {
+  position: fixed;
+  z-index: 50;
+  min-width: 240px;
+  max-width: 440px;
+  padding: 5px;
+  background: #1b232d;
+  border: 1px solid #33404f;
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .55);
+}
+.ctxmenu.hidden { display: none; }
+.ctxmenu .item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 9px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ctxmenu .item:hover { background: rgba(61, 139, 253, .18); }
+.ctxmenu .item .key { margin-left: auto; color: #64707f; font-size: 11px; }
+.ctxmenu .tick { width: 12px; color: var(--ok); font-size: 12px; }
+.ctxmenu .sub {
+  padding: 0 9px 4px 29px;
+  font-size: 11px;
+  color: #64707f;
+  font-family: var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ctxmenu .sub:empty { display: none; }
+.ctxmenu .sep { height: 1px; margin: 5px 6px; background: var(--line); }
+.ctxmenu .static {
+  padding: 2px 9px;
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #64707f;
+}
+.ctxmenu .item.parent .hint {
+  margin-left: auto;
+  padding-left: 12px;
+  font-size: 11px;
+  color: #64707f;
+}
+.ctxmenu .item.parent.off .tick { color: #46505e; }
+
+/* schemes hang off the switch above: indented, with a guide line */
+.ctxmenu .children {
+  margin: 1px 0 3px 10px;
+  padding-left: 12px;
+  border-left: 1px solid #2b3542;
+}
+.ctxmenu .children .item { padding: 3px 8px; font-size: 12px; }
+.ctxmenu .children .item.selected { background: rgba(61, 139, 253, .14); }
+.ctxmenu .children .item.selected .label { color: #cfe3ff; }
+.ctxmenu .children .tick { color: #3d8bfd; }
+.ctxmenu .item.scheme.off,
+.ctxmenu .item.scheme:disabled {
+  color: #46505e;
+  cursor: default;
+  background: transparent;
+}
+.ctxmenu .folderrow { display: flex; gap: 6px; padding: 4px 9px 6px 29px; }
+.ctxmenu .folderrow.hidden { display: none; }
+.ctxmenu .folderrow input { flex: 1; font-family: var(--mono); font-size: 12px; }
+.ctxmenu .folderrow button { padding: 4px 10px; font-size: 12px; }
+
+/* ---------- search bar ---------- */
+.searchbar {
+  position: fixed;
+  top: 52px;
+  right: 18px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  background: #1b232d;
+  border: 1px solid #33404f;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+}
+.searchbar.hidden { display: none; }
+.searchbar input#searchinput {
+  width: 260px;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 4px 7px;
+}
+.searchbar .toggle {
+  padding: 3px 7px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+.searchbar .toggle.on {
+  color: #d7e7ff;
+  background: rgba(61, 139, 253, .28);
+  border-color: #3d8bfd;
+}
+.searchbar .count {
+  min-width: 74px;
+  font-size: 11px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.searchbar .count:empty { display: none; }
+.searchbar .count.bad { color: var(--err); }
+.searchbar .icon { padding: 3px 7px; font-size: 12px; }

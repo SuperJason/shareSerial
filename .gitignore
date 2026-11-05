@@ -30,3 +30,9 @@ desktop.ini
 # Serial / runtime
 *.log
 config.json
+
+# Runtime files that live next to the executable
+serial-log.json
+/schemes/
+/serial-log/
+*.log

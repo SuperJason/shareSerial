@@ -1,0 +1,51 @@
+{
+  "name": "Simple",
+  "description": "Quiet scheme: only errors, warnings, timestamps and numbers are coloured, everything else stays in the default foreground.",
+  "rules": [
+    {
+      "name": "error",
+      "color": "#f44747",
+      "pattern": "\\b(error|errors|failed|failure|fail|panic|fatal|assert|denied|refused|corrupt|timeout|timed out|unable to|not found|no space)\\b"
+    },
+    {
+      "name": "error tag",
+      "color": "#f44747",
+      "pattern": "\\b[EWF]/[A-Za-z0-9_]+\\b"
+    },
+    {
+      "name": "warn",
+      "color": "#cd9731",
+      "pattern": "\\b(warn|warning|deprecated|retry|retrying|skipped|slow)\\b"
+    },
+    {
+      "name": "success",
+      "color": "#32cd32",
+      "pattern": "\\b(ok|okay|success|succeeded|pass|passed|done|ready|connected|mounted|started|online)\\b"
+    },
+    {
+      "name": "kernel ts",
+      "color": "#A6E22E",
+      "pattern": "\\[\\s*\\d+\\.\\d+\\]"
+    },
+    {
+      "name": "clock",
+      "color": "#A6E22E",
+      "pattern": "\\b\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?\\b"
+    },
+    {
+      "name": "ip",
+      "color": "#A6E22E",
+      "pattern": "\\b\\d{1,3}(?:\\.\\d{1,3}){3}(?::\\d+)?\\b"
+    },
+    {
+      "name": "hex",
+      "color": "#AE81FF",
+      "pattern": "\\b0x[0-9a-fA-F]+\\b"
+    },
+    {
+      "name": "number",
+      "color": "#AE81FF",
+      "pattern": "(?<![\\w.])\\d+(?:\\.\\d+)?(?![\\w-])"
+    }
+  ]
+}

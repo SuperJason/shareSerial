@@ -1,7 +1,23 @@
 {
-  "com_port": "COM22",
+  "com_port": "COM3",
   "baud_rate": 115200,
+  "data_bits": 8,
+  "stop_bits": 1,
+  "parity": "none",
+  "encoding": "utf-8",
   "log_file": "",
+  "data_log_file": "",
+  "bin_log_file": "",
+  "target_ip": "",
   "target_port": 2601,
-  "data_log_file": "1"
+  "tap_port": 2602,
+  "frame_port": 2603,
+  "write_policy": "first",
+  "web_port": 18080,
+  "window": true,
+  "auto_reopen": true,
+  "line_idle_ms": 100,
+  "max_line_bytes": 8192,
+  "max_records": 200000,
+  "max_bytes": 33554432
 }

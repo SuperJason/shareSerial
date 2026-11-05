@@ -1,0 +1,87 @@
+{
+  "name": "WindTerm (Monokai)",
+  "description": "Keyword sets from WindTerm 2.7.0 terminal/schemes/linux/linux.lexer, colours from global/themes/dige-black/scheme.theme. Its lexer has no rule for kernel '[ 1234.567]' timestamps, so the digits fall through to constant.numeric (violet) and only the brackets take punctuation green - that is what WindTerm looks like on a serial console.",
+  "rules": [
+    {
+      "name": "error",
+      "color": "#f44747",
+      "pattern": "\\b(bad|cannot(?: \\w+)?|denied|deprecated|disabled|errors?|fail(?:ed)?|failure|false|important|incorrect|invalid|no(?: \\w+)?|none|(?:(?:do|does|can|will|could|should|would) )?not(?: \\w+)?|(?:do|does|ca|wo|could|should|would)n't(?:(?: be)? \\w+)?|refused|unknown|unsupported|warn(?:ing)?|wrong)\\b"
+    },
+    {
+      "name": "error tag",
+      "color": "#f44747",
+      "pattern": "\\b[EWF]/[A-Za-z0-9_]+\\b"
+    },
+    {
+      "name": "warn",
+      "color": "#cd9731",
+      "pattern": "\\b(closed|exited|debug|disconnected|skipped|stopped|sudo|terminated)\\b"
+    },
+    {
+      "name": "success",
+      "color": "#32cd32",
+      "pattern": "\\b(can(?: \\w+)?|correct(?:ly)?|known|ok|pass(?:ed)?|success(?:ful(?:ly)?)?|supported|true|yes|valid)\\b"
+    },
+    {
+      "name": "info",
+      "color": "#6796e6",
+      "pattern": "\\b(access|any|authentication|connection|disconnection|info|login|operation|password|permission)\\b"
+    },
+    {
+      "name": "date",
+      "color": "#A6E22E",
+      "pattern": "\\b\\d{4}[/-]\\d{1,2}[/-]\\d{1,2}(?:[ T]\\d{1,2}(?::\\d{2}){1,2}(?:\\.\\d+)?)?\\b"
+    },
+    {
+      "name": "clock",
+      "color": "#A6E22E",
+      "pattern": "\\b\\d{1,2}:\\d{2}:\\d{2}(?:\\.\\d+)?\\b"
+    },
+    {
+      "name": "ip",
+      "color": "#A6E22E",
+      "pattern": "\\b\\d{1,3}(?:\\.\\d{1,3}){3}(?::\\d+)?\\b"
+    },
+    {
+      "name": "mac",
+      "color": "#A6E22E",
+      "pattern": "\\b(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}\\b"
+    },
+    {
+      "name": "hex",
+      "color": "#AE81FF",
+      "pattern": "(?<=\\s)(?:0x[0-9a-fA-F]+|(?:[0-9a-fA-F]{4}){1,2})\\b"
+    },
+    {
+      "name": "number",
+      "color": "#AE81FF",
+      "pattern": "(?<!\\w)(?<![_\\d.])(?<!\\S-)\\d+(?:\\.\\d+)*(?:e[+-]\\d+)?%?(?![_-])(?=\\b|\\s)",
+      "note": "verbatim from linux.lexer: a number whose '-' follows a non-space (e.g. ':-107') is not a number"
+    },
+    {
+      "name": "string",
+      "color": "#E6DB74",
+      "pattern": "\"(?:[^\"\\\\]|\\\\.)*\"|'(?:[^'\\\\]|\\\\.)*'"
+    },
+    {
+      "name": "path",
+      "color": "#E6DB74",
+      "pattern": "(?<=[\\s(])/[\\w.@+-]+(?:/[\\w.@+-]+)*"
+    },
+    {
+      "name": "option",
+      "color": "#FD971F",
+      "pattern": "(?<=\\s)--?[A-Za-z][\\w-]*"
+    },
+    {
+      "name": "punctuation",
+      "color": "#A6E22E",
+      "pattern": "[=:;|?*$<>&+-]"
+    },
+    {
+      "name": "brackets",
+      "color": "#A6E22E",
+      "pattern": "[()\\[\\]{}]"
+    }
+  ]
+}

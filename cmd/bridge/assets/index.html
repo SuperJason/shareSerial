@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Serial Log</title>
+<link rel="stylesheet" href="/vendor/xterm.css">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="bar">
+  <select id="port" title="Serial port"></select>
+  <button id="refreshPorts" class="icon" title="Refresh port list">&#8635;</button>
+  <input id="baud" list="bauds" value="115200" size="7" spellcheck="false" title="Baud rate">
+  <datalist id="bauds">
+    <option>9600</option><option>19200</option><option>38400</option><option>57600</option>
+    <option>115200</option><option>230400</option><option>460800</option><option>921600</option>
+    <option>1500000</option><option>3000000</option>
+  </datalist>
+  <select id="databits" title="Data bits">
+    <option>8</option><option>7</option><option>6</option><option>5</option>
+  </select>
+  <select id="parity" title="Parity">
+    <option value="none">N</option><option value="even">E</option>
+    <option value="odd">O</option><option value="mark">M</option><option value="space">S</option>
+  </select>
+  <select id="stopbits" title="Stop bits">
+    <option value="1">1</option><option value="2">2</option>
+  </select>
+  <select id="encoding" title="Device character set">
+    <option value="utf-8">UTF-8</option>
+    <option value="gbk">GBK</option>
+    <option value="gb18030">GB18030</option>
+    <option value="big5">Big5</option>
+    <option value="shift-jis">Shift-JIS</option>
+    <option value="euc-kr">EUC-KR</option>
+    <option value="latin1">Latin-1 / raw</option>
+  </select>
+  <button id="toggle" class="primary">Open</button>
+  <span id="status" class="pill">closed</span>
+  <div class="spacer"></div>
+  <span class="stat">RX <b id="rx">0</b></span>
+  <span class="stat">TX <b id="tx">0</b></span>
+</header>
+
+<div id="screenwrap">
+  <main id="term"></main>
+  <div id="scrollbar"><div id="scrollthumb"></div></div>
+</div>
+
+<div id="searchbar" class="searchbar hidden">
+  <input id="searchinput" placeholder="Find in log" spellcheck="false" autocomplete="off">
+  <button id="searchregex" class="toggle" title="Regular expression" aria-pressed="false">.*</button>
+  <span id="searchcount" class="count"></span>
+  <button id="searchprev" class="icon" title="Previous (Shift+Enter)">&#8593;</button>
+  <button id="searchnext" class="icon" title="Next (Enter)">&#8595;</button>
+  <button id="searchclose" class="icon" title="Close (Esc)">&#10005;</button>
+</div>
+
+<div id="ctxmenu" class="ctxmenu hidden">
+  <button class="item" data-act="capture">
+    <span class="tick" id="capturetick"></span>
+    <span id="capturelabel">Start capture</span>
+  </button>
+  <div class="sub" id="capturepath"></div>
+  <button class="item" data-act="folder">Set capture folder&hellip;</button>
+  <div class="folderrow hidden" id="folderrow">
+    <input id="folderinput" placeholder="C:\logs" spellcheck="false">
+    <button id="foldersave" class="primary">OK</button>
+  </div>
+  <div class="sep"></div>
+  <button class="item" data-act="search">Search&hellip;<span class="key">Ctrl+F</span></button>
+  <button class="item" data-act="copy">Copy<span class="key">Ctrl+C</span></button>
+  <button class="item" data-act="paste">Paste<span class="key">Ctrl+V</span></button>
+  <div class="sep"></div>
+  <div class="static">Color</div>
+  <button class="item parent" id="colorToggle" data-act="color">
+    <span class="tick" id="colortick"></span>
+    <span>Color output</span>
+    <span class="hint" id="activeScheme"></span>
+  </button>
+  <div id="schemeList" class="children"></div>
+  <button class="item" data-act="clear">Clear scrollback</button>
+</div>
+
+<footer class="foot" id="foot"></footer>
+
+<script src="/vendor/xterm.js"></script>
+<script src="/vendor/addon-fit.js"></script>
+<script src="/vendor/addon-search.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
