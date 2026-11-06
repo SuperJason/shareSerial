@@ -644,7 +644,19 @@ func TestHTTPAPI(t *testing.T) {
 		return strings.Contains(body, "api line")
 	})
 
-	code, body := get("/api/export?format=txt")
+	// reading surface for scripts: plain lines plus a cursor for incremental use
+	code, body := get("/api/text?tail=5")
+	if code != 200 || !strings.Contains(body, "api line") {
+		t.Fatalf("text tail: %d %s", code, body)
+	}
+	if strings.Contains(body, "{") && strings.Contains(body, "\"records\"") {
+		t.Fatalf("text tail must be plain text, got JSON: %s", body)
+	}
+	if code, body = get("/api/text?after=999999"); code != 200 || strings.TrimSpace(body) != "" {
+		t.Fatalf("text after: %d %q", code, body)
+	}
+
+	code, body = get("/api/export?format=txt")
 	if code != 200 || !strings.Contains(body, "api line") {
 		t.Fatalf("export: %d %s", code, body)
 	}

@@ -48,6 +48,7 @@ func (w *webServer) routes() {
 	w.mux.HandleFunc("/api/state", w.handleState)
 	w.mux.HandleFunc("/api/ports", w.handlePorts)
 	w.mux.HandleFunc("/api/records", w.handleRecords)
+	w.mux.HandleFunc("/api/text", w.handleText)
 	w.mux.HandleFunc("/api/stream", w.handleStream)
 	w.mux.HandleFunc("/api/send", w.handleSend)
 	w.mux.HandleFunc("/api/open", w.handleOpen)
@@ -112,6 +113,78 @@ func (w *webServer) handleRecords(rw http.ResponseWriter, r *http.Request) {
 		"last":    w.app.Ring().Last(),
 		"oldest":  w.app.Ring().Oldest(),
 	})
+}
+
+
+// handleText is the agent-facing reading surface: the same records the window
+// shows, as plain lines instead of JSON, so a script does not have to parse
+// anything. Two modes:
+//
+//	/api/text?tail=200            newest 200 lines
+//	/api/text?after=1234&limit=200 lines newer than sequence 1234
+//
+// The response carries X-Seq-Next, which is the cursor to pass back to
+// ?after= to get only what arrived since. That is what makes incremental
+// reading possible without spooling to a file.
+func (w *webServer) handleText(rw http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	tail, _ := strconv.Atoi(q.Get("tail"))
+	after, _ := strconv.ParseUint(q.Get("after"), 10, 64)
+	limit, _ := strconv.Atoi(q.Get("limit"))
+
+	var recs []Rec
+	var next uint64
+	switch {
+	case q.Get("after") != "" || q.Get("since") != "":
+		if after == 0 {
+			after, _ = strconv.ParseUint(q.Get("since"), 10, 64)
+		}
+		if limit <= 0 {
+			limit = 500
+		}
+		if limit > 5000 {
+			limit = 5000
+		}
+		recs, next = w.app.Ring().Since(after, limit)
+	default:
+		if tail <= 0 {
+			tail = 100
+		}
+		if tail > 5000 {
+			tail = 5000
+		}
+		recs, next = w.app.Ring().Tail(tail)
+	}
+
+	withTime := q.Get("ts") == "1"
+	withDir := q.Get("dir") == "1"
+
+	var b strings.Builder
+	for _, rec := range recs {
+		text := rec.Text
+		if text == "" && rec.Hex != "" {
+			text = rec.Hex
+		}
+		if withTime || withDir {
+			if withDir {
+				b.WriteString(strings.ToUpper(rec.Dir))
+				b.WriteByte(' ')
+			}
+			if withTime {
+				b.WriteString(time.UnixMilli(rec.Ts).Format("15:04:05.000"))
+				b.WriteByte(' ')
+			}
+		}
+		b.WriteString(text)
+		b.WriteString("\n")
+	}
+
+	rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	rw.Header().Set("Cache-Control", "no-store")
+	rw.Header().Set("X-Seq-Next", strconv.FormatUint(next, 10))
+	rw.Header().Set("X-Seq-Last", strconv.FormatUint(w.app.Ring().Last(), 10))
+	rw.Header().Set("X-Seq-Oldest", strconv.FormatUint(w.app.Ring().Oldest(), 10))
+	rw.Write([]byte(b.String()))
 }
 
 // handleStream is the terminal byte stream: decoded RX chunks as they arrive,
