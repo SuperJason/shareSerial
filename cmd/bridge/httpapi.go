@@ -23,6 +23,7 @@ type webServer struct {
 	app   *App
 	rtlog interface{ Printf(string, ...any) }
 	mux   *http.ServeMux
+	port  int // actual listening port
 }
 
 func newWebServer(a *App) *webServer {
@@ -45,6 +46,8 @@ func (w *webServer) routes() {
 		rw.WriteHeader(http.StatusNoContent)
 	})
 
+	w.mux.HandleFunc("/api/hello", w.handleHello)
+	w.mux.HandleFunc("/llms.txt", w.handleLLMS)
 	w.mux.HandleFunc("/api/state", w.handleState)
 	w.mux.HandleFunc("/api/ports", w.handlePorts)
 	w.mux.HandleFunc("/api/records", w.handleRecords)
@@ -84,6 +87,19 @@ func writeErr(rw http.ResponseWriter, code int, err error) {
 	writeJSON(rw, code, map[string]any{"ok": false, "error": err.Error()})
 }
 
+// handleHello is what an agent calls first: what this is, what it is doing, and
+// where the data is.
+func (w *webServer) handleHello(rw http.ResponseWriter, r *http.Request) {
+	writeJSON(rw, http.StatusOK, w.app.Hello(w.port))
+}
+
+// handleLLMS is the same thing as prose, for clients that read text.
+func (w *webServer) handleLLMS(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	rw.Header().Set("Cache-Control", "no-store")
+	io.WriteString(rw, w.app.LLMSText(w.port))
+}
+
 func (w *webServer) handleState(rw http.ResponseWriter, r *http.Request) {
 	writeJSON(rw, http.StatusOK, w.app.State())
 }
@@ -114,7 +130,6 @@ func (w *webServer) handleRecords(rw http.ResponseWriter, r *http.Request) {
 		"oldest":  w.app.Ring().Oldest(),
 	})
 }
-
 
 // handleText is the agent-facing reading surface: the same records the window
 // shows, as plain lines instead of JSON, so a script does not have to parse
@@ -581,6 +596,9 @@ func startWeb(a *App, port int) (*http.Server, net.Listener, error) {
 	ln, err := net.Listen("tcp", net.JoinHostPort("127.0.0.1", fmt.Sprint(port)))
 	if err != nil {
 		return nil, nil, err
+	}
+	if addr, ok := ln.Addr().(*net.TCPAddr); ok {
+		w.port = addr.Port
 	}
 	srv := &http.Server{Handler: w.handler(), ReadHeaderTimeout: 10 * time.Second}
 	go srv.Serve(ln)

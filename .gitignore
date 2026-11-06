@@ -36,3 +36,4 @@ serial-log.json
 /schemes/
 /serial-log/
 *.log
+serial-log.endpoint.json

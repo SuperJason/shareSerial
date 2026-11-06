@@ -74,7 +74,7 @@ func (f *fakePort) Close() error {
 	return nil
 }
 
-func (f *fakePort) SetMode(*serial.Mode) error        { return nil }
+func (f *fakePort) SetMode(*serial.Mode) error         { return nil }
 func (f *fakePort) SetReadTimeout(time.Duration) error { return nil }
 
 func (f *fakePort) writtenString() string {
@@ -644,8 +644,21 @@ func TestHTTPAPI(t *testing.T) {
 		return strings.Contains(body, "api line")
 	})
 
+	// self-description: an agent that just found the port learns the whole layout
+	code, body := get("/api/hello")
+	if code != 200 || !strings.Contains(body, "\"capabilities\"") || !strings.Contains(body, "\"transports\"") {
+		t.Fatalf("hello: %d %s", code, body)
+	}
+	if !strings.Contains(body, "/api/text") || !strings.Contains(body, "read_incremental") {
+		t.Fatalf("hello must advertise the read path: %s", body)
+	}
+	code, body = get("/llms.txt")
+	if code != 200 || !strings.Contains(body, "serial-log") || !strings.Contains(body, "X-Seq-Next") {
+		t.Fatalf("llms.txt: %d %s", code, body)
+	}
+
 	// reading surface for scripts: plain lines plus a cursor for incremental use
-	code, body := get("/api/text?tail=5")
+	code, body = get("/api/text?tail=5")
 	if code != 200 || !strings.Contains(body, "api line") {
 		t.Fatalf("text tail: %d %s", code, body)
 	}

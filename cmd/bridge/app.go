@@ -51,15 +51,17 @@ type App struct {
 	bus   *bus
 	cap   *capture
 
-	mu      sync.Mutex
-	cfg     Config
-	cfgPath string
-	port    serialPort
-	quit    chan struct{}
-	codec   *codec // TX encoding + TX display decoding
-	params  portParams
-	status  string
-	lastErr string
+	mu         sync.Mutex
+	cfg        Config
+	cfgPath    string
+	exePath    string
+	schemesDir string
+	port       serialPort
+	quit       chan struct{}
+	codec      *codec // TX encoding + TX display decoding
+	params     portParams
+	status     string
+	lastErr    string
 
 	demoStop chan struct{}
 
@@ -175,8 +177,8 @@ func (a *App) ConfigPath() string {
 	return a.cfgPath
 }
 
-func (a *App) Ring() *ring    { return a.ring }
-func (a *App) Bus() *bus      { return a.bus }
+func (a *App) Ring() *ring         { return a.ring }
+func (a *App) Bus() *bus           { return a.bus }
 func (a *App) Logger() *log.Logger { return a.rtlog }
 
 // modeLabel renders "115200 8N1" style text for the log.
@@ -525,40 +527,40 @@ func (a *App) State() map[string]any {
 	rx := a.rxBytes.Load()
 	tx := a.txBytes.Load()
 	state := map[string]any{
-		"status":     status,
-		"open":       open,
-		"last_error": lastErr,
-		"port":       params.Port,
-		"baud":       cfg.BaudRate,
-		"data_bits":  cfg.DataBits,
-		"stop_bits":  cfg.StopBits,
-		"parity":     cfg.Parity,
-		"encoding":   cfg.Encoding,
-		"rx_bytes":   rx,
-		"tx_bytes":   tx,
-		"rx_records": a.rxRecs.Load(),
-		"tx_records": a.txRecs.Load(),
-		"records":    count,
-		"ring_bytes": bytes,
-		"seq":        total,
-		"evicted":    dropped,
-		"clients":    a.bus.count(),
+		"status":      status,
+		"open":        open,
+		"last_error":  lastErr,
+		"port":        params.Port,
+		"baud":        cfg.BaudRate,
+		"data_bits":   cfg.DataBits,
+		"stop_bits":   cfg.StopBits,
+		"parity":      cfg.Parity,
+		"encoding":    cfg.Encoding,
+		"rx_bytes":    rx,
+		"tx_bytes":    tx,
+		"rx_records":  a.rxRecs.Load(),
+		"tx_records":  a.txRecs.Load(),
+		"records":     count,
+		"ring_bytes":  bytes,
+		"seq":         total,
+		"evicted":     dropped,
+		"clients":     a.bus.count(),
 		"subscribers": a.bus.list(),
-		"uptime_s":   int(time.Since(a.startedAt).Seconds()),
-		"capture":    captureState(a),
+		"uptime_s":    int(time.Since(a.startedAt).Seconds()),
+		"capture":     captureState(a),
 		"config": map[string]any{
-			"com_port":       cfg.ComPort,
-			"baud_rate":      cfg.BaudRate,
-			"data_bits":      cfg.DataBits,
-			"stop_bits":      cfg.StopBits,
-			"parity":         cfg.Parity,
-			"encoding":       cfg.Encoding,
-			"target_port":    cfg.TargetPort,
-			"tap_port":       cfg.TapPort,
-			"frame_port":     cfg.FramePort,
-			"write_policy":   cfg.WritePolicy,
-			"web_port":       cfg.WebPort,
-			"capture_dir":    cfg.CaptureDir,
+			"com_port":        cfg.ComPort,
+			"baud_rate":       cfg.BaudRate,
+			"data_bits":       cfg.DataBits,
+			"stop_bits":       cfg.StopBits,
+			"parity":          cfg.Parity,
+			"encoding":        cfg.Encoding,
+			"target_port":     cfg.TargetPort,
+			"tap_port":        cfg.TapPort,
+			"frame_port":      cfg.FramePort,
+			"write_policy":    cfg.WritePolicy,
+			"web_port":        cfg.WebPort,
+			"capture_dir":     cfg.CaptureDir,
 			"capture_default": cfg.CaptureEnabled,
 		},
 	}

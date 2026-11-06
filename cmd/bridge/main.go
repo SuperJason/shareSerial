@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -132,6 +133,8 @@ func main() {
 		os.Exit(1)
 	}
 	app.SetConfigPath(*configFile)
+	exePath, _ := os.Executable()
+	app.SetRuntimePaths(exePath, schemesDir)
 	rtlog.Printf("serial-log %s starting: port=%q baud=%d enc=%s policy=%s",
 		version, cfg.ComPort, cfg.BaudRate, cfg.Encoding, cfg.WritePolicy)
 
@@ -146,7 +149,14 @@ func main() {
 		fmt.Fprintf(os.Stderr, "web UI: %v\n", err)
 		os.Exit(1)
 	}
-	uiURL := fmt.Sprintf("http://127.0.0.1:%d/", cfg.WebPort)
+	listenPort := cfg.WebPort
+	if addr, ok := webLn.Addr().(*net.TCPAddr); ok {
+		listenPort = addr.Port
+	}
+	if err := writeEndpointFile(*configFile, listenPort); err != nil {
+		rtlog.Printf("endpoint file: %v", err)
+	}
+	uiURL := fmt.Sprintf("http://127.0.0.1:%d/", listenPort)
 	rtlog.Printf("log window UI: %s", uiURL)
 
 	if !*demo && cfg.ComPort != "" {
@@ -178,6 +188,7 @@ func main() {
 	fmt.Printf(" config  : %s\n", *configFile)
 	fmt.Printf(" schemes : %s\n", orDash(schemesDir))
 	fmt.Printf(" window  : %s\n", uiURL)
+	fmt.Printf(" agent   : %sapi/hello  (self-description, state, examples)\n", uiURL)
 	fmt.Println("----------------------------------------------")
 
 	sigCh := make(chan os.Signal, 1)
