@@ -242,6 +242,8 @@ schemes\
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | GET | `/api/state` | 端口状态、RX/TX 计数、抓取状态、配置 |
+| GET | `/api/hello` | 自我描述：这是什么、当前状态、能力清单、读/写示例 |
+| GET | `/llms.txt` | 同一份描述的纯文本（Markdown）版 |
 | GET | `/api/ports` | 可用串口列表 |
 | GET | `/api/records?tail=N` | 最近 N 条记录（JSON，带 seq/ts/dir） |
 | GET | `/api/records?after=SEQ&limit=N` | seq 之后的新记录（JSON） |
@@ -281,6 +283,53 @@ curl -s "http://127.0.0.1:18080/api/text?after=$NEXT&limit=500"
 参数：`ts=1` 每行加 `HH:MM:SS.mmm`，`dir=1` 每行加 `RX`/`TX`/`SYS` 前缀。
 默认只给正文。二进制负载（解码不出文本的块）以十六进制串输出，不会把控制字符塞进
 纯文本流。
+
+### 给 Agent 的自我描述
+
+Agent 第一次接触这个工具时，一次请求就能拿到全部上下文：
+
+```bash
+curl -s http://127.0.0.1:18080/api/hello
+```
+
+返回内容：
+
+| 字段 | 内容 |
+|---|---|
+| `schema` | 结构版本号，字段以后有变动时递增 |
+| `summary` / `how_it_works` | 这是什么、数据怎么流动 |
+| `state` | 与 `/api/state` 相同：串口开没开、参数、抓取状态、缓冲占用、订阅者 |
+| `buffer` | `seq_last` / `seq_oldest` / 条数 / 容量 |
+| `transports` | 五条读取路径（两路 HTTP + 三路 TCP）的地址、格式、是否双工 |
+| `capabilities` | 能做什么，每条带可直接复制的 `call` 和 `body`；写入类会注明当前写策略 |
+| `paths` | exe / 配置文件 / 颜色方案目录 / 抓取目录 / endpoint 文件 |
+| `notes` | 限制与坑（颜色只是显示层、缓冲会淘汰、端口关闭时的表现等） |
+
+同样内容还有一份散文版，给更愿意读文本的客户端：
+
+```bash
+curl -s http://127.0.0.1:18080/llms.txt
+```
+
+两者都是**实时生成**的，`state`、`buffer` 部分永远是当前值，不会过期。
+
+**端口怎么找**：默认 18080。启动时还会在配置文件旁边写一个
+`serial-log.endpoint.json`：
+
+```json
+{ "service": "serial-log", "web_port": 18080, "version": "2.0.0",
+  "url": "http://127.0.0.1:18080/", "hello": "http://127.0.0.1:18080/api/hello",
+  "pid": 15792, "started_at": "2026-11-06T11:33:24+08:00" }
+```
+
+用 `-web` 换端口（或以后支持随机端口）时读这个文件即可，不必猜；里面的 `pid`
+可以用来判断文件是不是上次遗留的。
+
+一个 Agent 的典型开场：
+
+1. `GET /api/hello` → 串口开着、COM3 @ 115200、缓冲里有 431 条、推荐走 `/api/text`
+2. `GET /api/text?tail=200` → 看现场
+3. 记下响应头 `X-Seq-Next`，之后只 `GET /api/text?after=<cursor>` 取增量
 
 ## 配置文件
 
