@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	user32                       = syscall.NewLazyDLL("user32.dll")
-	procSystemParametersInfoW    = user32.NewProc("SystemParametersInfoW")
-	procGetSystemMetrics         = user32.NewProc("GetSystemMetrics")
-	procSetWindowPos             = user32.NewProc("SetWindowPos")
+	user32                    = syscall.NewLazyDLL("user32.dll")
+	procSystemParametersInfoW = user32.NewProc("SystemParametersInfoW")
+	procGetSystemMetrics      = user32.NewProc("GetSystemMetrics")
+	procSetWindowPos          = user32.NewProc("SetWindowPos")
 )
 
 type winRect struct{ Left, Top, Right, Bottom int32 }

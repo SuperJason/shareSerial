@@ -16,12 +16,12 @@ import (
 // Unknown keys from older config files (hub4com_*, ftdi_*) are ignored by
 // encoding/json, so an existing bridge_config.json keeps working.
 type Config struct {
-	ComPort   string `json:"com_port"`
-	BaudRate  int    `json:"baud_rate"`
-	DataBits  int    `json:"data_bits"`
-	StopBits  int    `json:"stop_bits"` // 1 or 2; 0 means 1
-	Parity    string `json:"parity"`    // none|odd|even|mark|space
-	Encoding  string `json:"encoding"`  // utf-8|gbk|gb18030|big5|shift-jis|latin1
+	ComPort  string `json:"com_port"`
+	BaudRate int    `json:"baud_rate"`
+	DataBits int    `json:"data_bits"`
+	StopBits int    `json:"stop_bits"` // 1 or 2; 0 means 1
+	Parity   string `json:"parity"`    // none|odd|even|mark|space
+	Encoding string `json:"encoding"`  // utf-8|gbk|gb18030|big5|shift-jis|latin1
 
 	// LogFile is the bridge's own runtime log (open/close/errors).
 	LogFile string `json:"log_file"`
