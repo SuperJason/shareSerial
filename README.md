@@ -26,8 +26,10 @@
 ## 构建与运行
 
 ```bash
-go build -o serial-log.exe ./cmd/bridge
+go build -ldflags "-H=windowsgui" -o serial-log.exe ./cmd/bridge
 ```
+
+`-H=windowsgui` 是必须的：没有它，双击会先弹出一个控制台窗口。构建脚本见 `build.bat`。
 
 ```bash
 serial-log.exe -p 3 -b 115200 -window
@@ -41,6 +43,7 @@ serial-log.exe -p 3 -b 115200 -window
 | `-frame` | 数据位/停止位，如 `8N1` |
 | `-wpolicy` | 2601 写策略：`first`（先连上的独占）/ `all` / `readonly` |
 | `-window` / `-no-window` | 是否开窗口，默认开 |
+| `-console` | 附加（或新建）一个控制台，让横幅和日志能在终端里看到；双击时不需要 |
 | `-demo` | 不连串口，输出演示数据 |
 | `-config` | 配置文件路径，默认 exe 同目录的 `serial-log.json` |
 | `-capture` | 启动即开始抓取（默认关闭） |
@@ -64,10 +67,14 @@ serial-log.exe -p 3 -b 115200 -window
 没有过滤行、没有发送框——键盘输入直接发往串口。设备本身会回显，所以本地不回显，
 打 `echo hi` 回车，看到的就和坐在目标机前面一样。
 
-双击启动时只会出现终端窗口。程序本身是控制台程序，Windows 会给它分配一个命令行
-窗口；启动时它会判断这个控制台是不是只有自己（双击的情况），是就立刻隐藏掉。从
-cmd / PowerShell / Windows Terminal 里启动时那个控制台是和 shell 共用的，会保留，
-横幅和错误照常打印在那里。控制台被隐藏后如果启动失败，会弹对话框提示，不会静默退出。
+双击启动时只会出现终端窗口。exe 是按 **GUI 子系统**链接的（`-ldflags -H=windowsgui`），
+Windows 根本不会给它分配控制台窗口，所以不存在"先弹一个黑窗口"的情况。
+
+代价是命令行输出默认没有去处：横幅、错误信息都会写进运行日志
+（`Documents\serial-log\bridge.log`）。想在终端里看到它们：
+
+- 从 cmd / PowerShell / Windows Terminal 启动时带 `-console`，会复用（或新建）一个控制台；
+- 启动期致命错误（端口非法、配置错误）会弹对话框提示，不会静默退出。
 
 ### 字体
 
