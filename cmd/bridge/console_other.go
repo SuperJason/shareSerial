@@ -2,8 +2,8 @@
 
 package main
 
-// Non-Windows builds run in a normal terminal: nothing to hide, and no message
-// box to fall back to.
-func hideOwnConsole() bool { return false }
+// On other platforms the binary keeps the console it was started with; there is
+// nothing to allocate and no dialog to fall back to.
+func attachConsole(allowAlloc bool) bool { return true }
 
 func messageBox(title, text string) {}

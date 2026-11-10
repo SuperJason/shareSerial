@@ -16,25 +16,22 @@ import (
 
 const version = "2.0.0"
 
-// consoleHidden is set when the program hid the console window it was given, so
-// that fatal errors know to use a dialog instead of stderr.
-var consoleHidden bool
+// consoleOn reports whether stdout/stderr reach a console; without one a fatal
+// error has to be shown in a dialog instead.
+var consoleOn bool
 
 // fatal reports a startup failure where the user will actually see it: the
 // console when the tool was started from a terminal, a dialog otherwise.
 func fatal(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
 	fmt.Fprintln(os.Stderr, msg)
-	if consoleHidden {
+	if !consoleOn {
 		messageBox("serial-log", msg)
 	}
 	os.Exit(1)
 }
 
 func main() {
-	// A double-click hands a console binary its own console window; hide it as
-	// early as possible so the serial window is the only one on screen.
-	consoleHidden = hideOwnConsole()
 	var (
 		configFile = flag.String("config", defaultConfigPath(), "config file path")
 		comPort    = flag.String("p", "", "COM port number or name, e.g. 3 or COM3")
@@ -54,8 +51,12 @@ func main() {
 		encoding   = flag.String("enc", "", "device charset: utf-8|gbk|gb18030|big5|shift-jis|euc-kr|latin1")
 		demo       = flag.Bool("demo", false, "run against a synthetic device instead of a COM port")
 		showVer    = flag.Bool("version", false, "print version and exit")
+		console    = flag.Bool("console", false, "attach or allocate a console for the banner (GUI build starts without one)")
 	)
 	flag.Parse()
+	// Linked as a GUI application, so there is no console window unless one is
+	// asked for: a parent console (shell) is reused, -console allocates one.
+	consoleOn = attachConsole(*console)
 	if *showVer {
 		fmt.Printf("serial-log %s\n", version)
 		return
@@ -153,8 +154,8 @@ func main() {
 	app.SetConfigPath(*configFile)
 	exePath, _ := os.Executable()
 	app.SetRuntimePaths(exePath, schemesDir)
-	rtlog.Printf("serial-log %s starting: port=%q baud=%d enc=%s policy=%s console_hidden=%v",
-		version, cfg.ComPort, cfg.BaudRate, cfg.Encoding, cfg.WritePolicy, consoleHidden)
+	rtlog.Printf("serial-log %s starting: port=%q baud=%d enc=%s policy=%s console=%v",
+		version, cfg.ComPort, cfg.BaudRate, cfg.Encoding, cfg.WritePolicy, consoleOn)
 
 	tr := newTransports(app, rtlog)
 	if err := tr.start(cfg); err != nil {
